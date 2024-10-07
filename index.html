@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Cosmic Nebula</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="nebulaCanvas"></canvas>
+
+<script>
+  const canvas = document.getElementById('nebulaCanvas');
+  const ctx = canvas.getContext('2d');
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  
+  let particles = [];
+  const planets = [];
+  let mouse = { x: centerX, y: centerY };
+  let warpMode = false;
+
+  // Nebula colors
+  const colors = ['#ff0080', '#80ff00', '#00ffff', '#ff8000', '#ff00ff', '#0080ff'];
+
+  class Particle {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+      this.size = Math.random() * 2 + 1;
+      this.speedX = Math.random() * 4 - 2;
+      this.speedY = Math.random() * 4 - 2;
+      this.color = colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    draw() {
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+
+      if (warpMode) {
+        this.x *= 0.99;
+        this.y *= 0.99;
+      }
+
+      // Boundary check
+      if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+      }
+
+      this.draw();
+    }
+  }
+
+  class Planet {
+    constructor(x, y, radius, color) {
+      this.x = x;
+      this.y = y;
+      this.radius = radius;
+      this.color = color;
+      this.angle = 0;
+      this.orbitRadius = Math.random() * 100 + 100;
+      this.orbitSpeed = Math.random() * 0.02 + 0.005;
+      this.planetaryParticles = [];
+    }
+
+    draw() {
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, this.orbitRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    update() {
+      this.angle += this.orbitSpeed;
+      this.x = centerX + this.orbitRadius * Math.cos(this.angle);
+      this.y = centerY + this.orbitRadius * Math.sin(this.angle);
+
+      this.draw();
+    }
+  }
+
+  function generateParticles() {
+    for (let i = 0; i < 200; i++) {
+      particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height));
+    }
+  }
+
+  function generatePlanets() {
+    planets.push(new Planet(centerX, centerY, 30, '#ffffff')); // Star in center
+    for (let i = 0; i < 5; i++) {
+      planets.push(new Planet(centerX, centerY, Math.random() * 20 + 10, colors[i]));
+    }
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Animate particles
+    particles.forEach(particle => {
+      particle.update();
+    });
+
+    // Animate planets
+    planets.forEach(planet => {
+      planet.update();
+    });
+
+    requestAnimationFrame(animate);
+  }
+
+  canvas.addEventListener('mousemove', (event) => {
+    mouse.x = event.clientX;
+    mouse.y = event.clientY;
+  });
+
+  window.addEventListener('keypress', (event) => {
+    if (event.key === 'w') {
+      warpMode = !warpMode; // Toggle warp mode
+    }
+  });
+
+  // Resize canvas
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+
+  generateParticles();
+  generatePlanets();
+  animate();
+
+</script>
+
+</body>
+</html>
